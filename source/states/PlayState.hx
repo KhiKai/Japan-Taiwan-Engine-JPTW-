@@ -940,8 +940,8 @@ class PlayState extends MusicBeatState
 		var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
 		var introImagesArray:Array<String> = switch(stageUI) {
 			case "pixel": ['pixelUI/ready-pixel', 'pixelUI/set-pixel', 'pixelUI/date-pixel'];
-			case "normal": ["ready", "set" ,"go"];
-			default: ['${uiPrefix}UI/ready${uiPostfix}', '${uiPrefix}UI/set${uiPostfix}', '${uiPrefix}UI/go${uiPostfix}'];
+			case "normal": ["three", "two", "one" ,"go"];
+			default: ['${uiPrefix}UI/three${uiPostfix}', '${uiPrefix}UI/two${uiPostfix}','${uiPrefix}UI/one${uiPostfix}', '${uiPrefix}UI/go${uiPostfix}'];
 		}
 		introAssets.set(stageUI, introImagesArray);
 		var introAlts:Array<String> = introAssets.get(stageUI);
@@ -1004,8 +1004,8 @@ class PlayState extends MusicBeatState
 				var introAssets:Map<String, Array<String>> = new Map<String, Array<String>>();
 				var introImagesArray:Array<String> = switch(stageUI) {
 					case "pixel": ['pixelUI/ready-pixel', 'pixelUI/set-pixel', 'pixelUI/date-pixel'];
-					case "normal": ["ready", "set" ,"go"];
-					default: ['${uiPrefix}UI/ready${uiPostfix}', '${uiPrefix}UI/set${uiPostfix}', '${uiPrefix}UI/go${uiPostfix}'];
+					case "normal": ["three", "two", "one" ,"go"];
+					default: ['${uiPrefix}UI/three${uiPostfix}', '${uiPrefix}UI/two${uiPostfix}', '${uiPrefix}UI/one${uiPostfix}', '${uiPrefix}UI/go${uiPostfix}'];
 				}
 				introAssets.set(stageUI, introImagesArray);
 
@@ -1016,18 +1016,20 @@ class PlayState extends MusicBeatState
 				switch (swagCounter)
 				{
 					case 0:
+						
+						countdownReady = createCountdownSprite(introAlts[0], antialias);
 						FlxG.sound.play(Paths.sound('intro3' + introSoundsSuffix), 0.6);
 						tick = THREE;
 					case 1:
-						countdownReady = createCountdownSprite(introAlts[0], antialias);
+						countdownReady = createCountdownSprite(introAlts[1], antialias);
 						FlxG.sound.play(Paths.sound('intro2' + introSoundsSuffix), 0.6);
 						tick = TWO;
 					case 2:
-						countdownSet = createCountdownSprite(introAlts[1], antialias);
+						countdownSet = createCountdownSprite(introAlts[2], antialias);
 						FlxG.sound.play(Paths.sound('intro1' + introSoundsSuffix), 0.6);
 						tick = ONE;
 					case 3:
-						countdownGo = createCountdownSprite(introAlts[2], antialias);
+						countdownGo = createCountdownSprite(introAlts[3], antialias);
 						FlxG.sound.play(Paths.sound('introGo' + introSoundsSuffix), 0.6);
 						tick = GO;
 					case 4:
@@ -1057,29 +1059,49 @@ class PlayState extends MusicBeatState
 		return true;
 	}
 
-	inline private function createCountdownSprite(image:String, antialias:Bool):FlxSprite
-	{
-		var spr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(image));
-		spr.cameras = [camHUD];
-		spr.scrollFactor.set();
-		spr.updateHitbox();
+inline private function createCountdownSprite(image:String, antialias:Bool):FlxSprite {
+    var spr:FlxSprite = new FlxSprite().loadGraphic(Paths.image(image));
+    spr.cameras = [camHUD];
+    spr.scrollFactor.set();
+    spr.updateHitbox();
 
-		if (PlayState.isPixelStage)
-			spr.setGraphicSize(Std.int(spr.width * daPixelZoom));
+    if (PlayState.isPixelStage) {
+        spr.setGraphicSize(Std.int(spr.width * daPixelZoom));
+        spr.updateHitbox(); // <-- CRITICAL: Fixes centering on pixel stages
+    }
+    
+    spr.screenCenter();
+    spr.antialiasing = antialias;
 
-		spr.screenCenter();
-		spr.antialiasing = antialias;
-		insert(members.indexOf(noteGroup), spr);
-		FlxTween.tween(spr, {/*y: spr.y + 100,*/ alpha: 0}, Conductor.crochet / 1000, {
-			ease: FlxEase.cubeInOut,
-			onComplete: function(twn:FlxTween)
-			{
-				remove(spr);
-				spr.destroy();
-			}
-		});
-		return spr;
-	}
+    // Safer insertion fallback in case noteGroup isn't in members yet
+    var targetIndex:Int = members.indexOf(noteGroup);
+    if (targetIndex != -1) {
+        insert(targetIndex, spr);
+    } else {
+        add(spr); // Fallback so it doesn't crash or disappear
+    }
+
+    // --- SQUISH EFFECT CODE ---
+    // Set the starting scale properties: wider on X, squished/shorter on Y
+    spr.scale.set(1.3, 0.7); 
+
+    // Tween 1: Just handles fading out and destroying the sprite
+    FlxTween.tween(spr, {alpha: 0}, Conductor.crochet / 1000, {
+        ease: FlxEase.cubeInOut,
+        onComplete: function(twn:FlxTween) {
+            remove(spr);
+            spr.destroy();
+        }
+    });
+    
+    // Tween 2: Handles the scale recovery cleanly without property conflicts
+    FlxTween.tween(spr.scale, {x: 1, y: 1}, Conductor.crochet / 1000, {
+        ease: FlxEase.elasticOut
+    });
+    // --------------------------
+
+    return spr;
+}
 
 	public function addBehindGF(obj:FlxBasic)
 	{
