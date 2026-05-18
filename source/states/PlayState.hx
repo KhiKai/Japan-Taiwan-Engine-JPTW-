@@ -1013,29 +1013,28 @@ class PlayState extends MusicBeatState
 				var antialias:Bool = (ClientPrefs.data.antialiasing && !isPixelStage);
 				var tick:Countdown = THREE;
 
-				switch (swagCounter)
-				{
-					case 0:
-						
-						countdownReady = createCountdownSprite(introAlts[0], antialias);
-						FlxG.sound.play(Paths.sound('intro3' + introSoundsSuffix), 0.6);
-						tick = THREE;
-					case 1:
-						countdownReady = createCountdownSprite(introAlts[1], antialias);
-						FlxG.sound.play(Paths.sound('intro2' + introSoundsSuffix), 0.6);
-						tick = TWO;
-					case 2:
-						countdownSet = createCountdownSprite(introAlts[2], antialias);
-						FlxG.sound.play(Paths.sound('intro1' + introSoundsSuffix), 0.6);
-						tick = ONE;
-					case 3:
-						countdownGo = createCountdownSprite(introAlts[3], antialias);
-						FlxG.sound.play(Paths.sound('introGo' + introSoundsSuffix), 0.6);
-						tick = GO;
-					case 4:
-						tick = START;
-				}
-
+switch (swagCounter)
+{
+    case 0:
+        // No global variable tracking for "three", but if you choose to track it:
+        createCountdownSprite(introAlts[0], antialias); 
+        FlxG.sound.play(Paths.sound('intro3' + introSoundsSuffix), 0.6);
+        tick = THREE;
+    case 1:
+        countdownReady = createCountdownSprite(introAlts[1], antialias); // "ready" ("two")
+        FlxG.sound.play(Paths.sound('intro2' + introSoundsSuffix), 0.6);
+        tick = TWO;
+    case 2:
+        countdownSet = createCountdownSprite(introAlts[2], antialias); // "set" ("one")
+        FlxG.sound.play(Paths.sound('intro1' + introSoundsSuffix), 0.6);
+        tick = ONE;
+    case 3:
+        countdownGo = createCountdownSprite(introAlts[3], antialias); // "go" ("go")
+        FlxG.sound.play(Paths.sound('introGo' + introSoundsSuffix), 0.6);
+        tick = GO;
+    case 4:
+        tick = START;
+}
 				if(!skipArrowStartTween)
 				{
 					notes.forEachAlive(function(note:Note) {
